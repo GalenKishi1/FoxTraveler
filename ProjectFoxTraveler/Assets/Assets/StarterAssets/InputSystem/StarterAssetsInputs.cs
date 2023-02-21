@@ -12,6 +12,7 @@ namespace StarterAssets
 		public Vector2 look;
 		public bool jump;
 		public bool sprint;
+		public Animator animator;		
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -24,6 +25,9 @@ namespace StarterAssets
 		public void OnMove(InputValue value)
 		{
 			MoveInput(value.Get<Vector2>());
+            if (move.y == 1){
+				animator.SetFloat("VelY", 1);
+            }
 		}
 
 		public void OnLook(InputValue value)
