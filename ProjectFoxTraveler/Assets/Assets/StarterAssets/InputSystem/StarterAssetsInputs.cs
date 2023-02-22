@@ -24,10 +24,35 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
 		public void OnMove(InputValue value)
 		{
-			MoveInput(value.Get<Vector2>());
-            if (move.y == 1){
+			MoveInput(value.Get<Vector2>()); //Just Anim Front
+            if (move.y == 1 && move.x == 0){
 				animator.SetFloat("VelY", 1);
             }
+
+			if (move.y == 0 && move.x == 0) //Just Anim Idle
+            {
+				animator.SetFloat("VelY", 0);
+				animator.SetFloat("VelX", 0);
+            }
+
+			if (move.y == -1 && move.x == 0) //Just Anim Back
+            {
+				animator.SetFloat("VelY", -1);
+				animator.SetFloat("VelX", 0);
+			}
+
+			if (move.y == -1 && move.x == 0) //Just Anim Right
+			{
+				animator.SetFloat("VelY", -1);
+				animator.SetFloat("VelX", 0);
+			}
+
+			if (move.y == 0 && move.x == -1) //Just Anim Left
+			{
+				animator.SetFloat("VelY", 0);
+				animator.SetFloat("VelX", -1);
+			}
+
 		}
 
 		public void OnLook(InputValue value)
@@ -48,8 +73,6 @@ namespace StarterAssets
 			SprintInput(value.isPressed);
 		}
 #endif
-
-
 		public void MoveInput(Vector2 newMoveDirection)
 		{
 			move = newMoveDirection;
