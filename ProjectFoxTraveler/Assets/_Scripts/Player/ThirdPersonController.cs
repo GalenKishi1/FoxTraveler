@@ -16,10 +16,10 @@ namespace StarterAssets
     {
         [Header("Player")]
         [Tooltip("Move speed of the character in m/s")]
-        public float MoveSpeed = 2.0f;
+        public float MoveSpeed;
 
         [Tooltip("Sprint speed of the character in m/s")]
-        public float SprintSpeed = 5.335f;
+        public float SprintSpeed;
 
         [Tooltip("How fast the character turns to face movement direction")]
         [Range(0.0f, 0.3f)]
@@ -92,11 +92,8 @@ namespace StarterAssets
         private float _fallTimeoutDelta;
 
         // animation IDs
-        private int _animIDSpeed;
-        private int _animIDGrounded;
         private int _animIDJump;
         private int _animIDFreeFall;
-        private int _animIDMotionSpeed;
 
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
         private PlayerInput _playerInput;
@@ -108,7 +105,6 @@ namespace StarterAssets
 
         private const float _threshold = 0.01f;
 
-        private bool _hasAnimator;
 
         private bool IsCurrentDeviceMouse
         {
@@ -122,7 +118,6 @@ namespace StarterAssets
             }
         }
 
-
         private void Awake()
         {
             // get a reference to our main camera
@@ -135,10 +130,11 @@ namespace StarterAssets
         private void Start()
         {
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
-            
-            _hasAnimator = TryGetComponent(out _animator);
+
+            _animator = this.GetComponent<Animator>();
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<StarterAssetsInputs>();
+
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
             _playerInput = GetComponent<PlayerInput>();
 #else
@@ -154,8 +150,6 @@ namespace StarterAssets
 
         private void Update()
         {
-            _hasAnimator = TryGetComponent(out _animator);
-
             JumpAndGravity();
             GroundedCheck();
             Move();
@@ -168,11 +162,8 @@ namespace StarterAssets
 
         private void AssignAnimationIDs()
         {
-            _animIDSpeed = Animator.StringToHash("Speed");
-            _animIDGrounded = Animator.StringToHash("Grounded");
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
-            _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
         }
 
         private void GroundedCheck()
@@ -182,12 +173,6 @@ namespace StarterAssets
                 transform.position.z);
             Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
                 QueryTriggerInteraction.Ignore);
-
-            // update animator if using character
-            if (_hasAnimator)
-            {
-                _animator.SetBool(_animIDGrounded, Grounded);
-            }
         }
 
         private void CameraRotation()
@@ -272,11 +257,12 @@ namespace StarterAssets
                              new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
 
             // update animator if using character
-            if (_hasAnimator)
-            {
-                _animator.SetFloat(_animIDSpeed, _animationBlend);
-                _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
-            }
+            if (_input.move.y >= 1) _animator.SetFloat("Vertical", 1); //Front
+            if (_input.move.y == -1 && _input.move.x == 0) _animator.SetFloat("Vertical", -1); //Back
+            if (_input.move.y == 0 && _input.move.x == 0) _animator.SetFloat("Vertical", 0); _animator.SetFloat("Horizontal", 0); //Idle
+            if (_input.move.x == 1) _animator.SetFloat("Horizontal", -1); //Left
+            if (_input.move.x == -1) _animator.SetFloat("Horizontal", 1); //Right
+            Debug.Log(_input.move);
         }
 
         private void JumpAndGravity()
@@ -286,12 +272,8 @@ namespace StarterAssets
                 // reset the fall timeout timer
                 _fallTimeoutDelta = FallTimeout;
 
-                // update animator if using character
-                if (_hasAnimator)
-                {
-                    _animator.SetBool(_animIDJump, false);
-                    _animator.SetBool(_animIDFreeFall, false);
-                }
+                //Dont Jump
+                _animator.SetBool("IsJumpig?", false);
 
                 // stop our velocity dropping infinitely when grounded
                 if (_verticalVelocity < 0.0f)
@@ -305,11 +287,6 @@ namespace StarterAssets
                     // the square root of H * -2 * G = how much velocity needed to reach desired height
                     _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
 
-                    // update animator if using character
-                    if (_hasAnimator)
-                    {
-                        _animator.SetBool(_animIDJump, true);
-                    }
                 }
 
                 // jump timeout
@@ -327,16 +304,9 @@ namespace StarterAssets
                 if (_fallTimeoutDelta >= 0.0f)
                 {
                     _fallTimeoutDelta -= Time.deltaTime;
-                }
-                else
-                {
-                    // update animator if using character
-                    if (_hasAnimator)
-                    {
-                        _animator.SetBool(_animIDFreeFall, true);
-                    }
-                }
+                    _animator.SetBool("IsJumping?", true);
 
+                }
                 // if we are not grounded, do not jump
                 _input.jump = false;
             }
