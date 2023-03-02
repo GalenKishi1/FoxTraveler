@@ -91,9 +91,6 @@ namespace StarterAssets
         private float _jumpTimeoutDelta;
         private float _fallTimeoutDelta;
 
-        // animation IDs
-        private int _animIDJump;
-        private int _animIDFreeFall;
 
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
         private PlayerInput _playerInput;
@@ -141,8 +138,6 @@ namespace StarterAssets
 			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
 #endif
 
-            AssignAnimationIDs();
-
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
@@ -160,11 +155,6 @@ namespace StarterAssets
             CameraRotation();
         }
 
-        private void AssignAnimationIDs()
-        {
-            _animIDJump = Animator.StringToHash("Jump");
-            _animIDFreeFall = Animator.StringToHash("FreeFall");
-        }
 
         private void GroundedCheck()
         {
@@ -173,6 +163,7 @@ namespace StarterAssets
                 transform.position.z);
             Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
                 QueryTriggerInteraction.Ignore);
+
         }
 
         private void CameraRotation()
@@ -262,18 +253,17 @@ namespace StarterAssets
             if (_input.move.y == 0 && _input.move.x == 0) _animator.SetFloat("Vertical", 0); _animator.SetFloat("Horizontal", 0); //Idle
             if (_input.move.x == 1) _animator.SetFloat("Horizontal", -1); //Left
             if (_input.move.x == -1) _animator.SetFloat("Horizontal", 1); //Right
-            Debug.Log(_input.move);
+            
         }
 
         private void JumpAndGravity()
         {
+
             if (Grounded)
             {
+                
                 // reset the fall timeout timer
                 _fallTimeoutDelta = FallTimeout;
-
-                //Dont Jump
-                _animator.SetBool("IsJumpig?", false);
 
                 // stop our velocity dropping infinitely when grounded
                 if (_verticalVelocity < 0.0f)
@@ -294,6 +284,7 @@ namespace StarterAssets
                 {
                     _jumpTimeoutDelta -= Time.deltaTime;
                 }
+                _animator.SetBool("IsJumping?", false);
             }
             else
             {
@@ -304,11 +295,11 @@ namespace StarterAssets
                 if (_fallTimeoutDelta >= 0.0f)
                 {
                     _fallTimeoutDelta -= Time.deltaTime;
-                    _animator.SetBool("IsJumping?", true);
-
                 }
                 // if we are not grounded, do not jump
                 _input.jump = false;
+                _animator.SetBool("IsJumping?", true);
+
             }
 
             // apply gravity over time if under terminal (multiply by delta time twice to linearly speed up over time)
